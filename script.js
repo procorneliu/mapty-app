@@ -156,7 +156,7 @@ class App {
     //   }.bind(this)
     // );
 
-    this.currentDrawing = L.polyline([], { color: 'red', opacity: 0.5 }).addTo(this.#map);
+    this.currentDrawing = L.polyline([], { color: 'red', opacity: 0.4 }).addTo(this.#map);
 
     this.#workouts.forEach(work => this._renderWorkoutMarker(work));
 
@@ -186,6 +186,7 @@ class App {
   _exitDrawingMode(e) {
     if (e.key === 'Enter' && this.#drawingMode) {
       this.#coordinates.push(L.polyline(this.drawingLayerGroup, { color: 'red', opacity: 0.5 }));
+      // this.#coordinates.push([this.drawingLayerGroup]);
       this.#drawingMode = false;
       this._showForm();
     }
@@ -276,6 +277,9 @@ class App {
       this.currentDrawing.setLatLngs([]);
       this.allDrawings.push(this.drawingLayerGroup);
       this.#coordinates.slice(-1).forEach(coords => {
+        coords.options.color = '#00c46a';
+        coords.options.opacity = 1;
+
         coords.addTo(this.#map);
       });
 
@@ -296,6 +300,8 @@ class App {
       this.currentDrawing.setLatLngs([]);
       this.allDrawings.push(this.drawingLayerGroup);
       this.#coordinates.slice(-1).forEach(coords => {
+        coords.options.color = '#ffb545';
+        coords.options.opacity = 1;
         coords.addTo(this.#map);
       });
 
@@ -491,12 +497,11 @@ class App {
 
     this.#coordinates[index].remove();
     this.#coordinates.splice(index, 1);
+    this.allDrawings.splice(index, 1);
 
     // remove from local storage
     this._setLocalStorage();
     this._setLocalStorageDrawings();
-
-    // console.log(this.#coordinates);
   }
 
   // Edit existing workout on list
@@ -626,19 +631,17 @@ class App {
 
   _getLocalStorageDrawings() {
     const data = JSON.parse(localStorage.getItem('drawings'));
+    const workoutsData = this.#data;
 
     if (!data) return;
 
-    data.forEach(coords => {
-      const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+    data.forEach((coords, i) => {
+      const polyline = L.polyline(coords, {
+        color: `${workoutsData[i].type === 'running' ? '#00c46a' : '#ffb545'} `,
+      }).addTo(this.#map);
       this.allDrawings.push(coords);
       this.#coordinates.push(polyline);
     });
-
-    // this.#coordinates.forEach(coords => {
-    //   const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
-    //   // this.layerGroupContainer.push(polyline);
-    // });
   }
 
   _showButtons() {
