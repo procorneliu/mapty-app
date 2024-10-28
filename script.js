@@ -191,10 +191,6 @@ class App {
     }
   }
 
-  // _removeCurrentDraw() {
-  //   this.#drawingMode = false;
-  // }
-
   _hideForm() {
     form.style.display = 'none';
     form.classList.add('hidden');
@@ -281,8 +277,6 @@ class App {
       this.allDrawings.push(this.drawingLayerGroup);
       this.#coordinates.slice(-1).forEach(coords => {
         coords.addTo(this.#map);
-        // const polyline = L.polyline(coords._latlngs, { color: 'red', opacity: 0.5 }).addTo(this.#map);
-        // const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
       });
 
       workout = new Running([lat, lng], distance, duration, cadence);
@@ -297,6 +291,13 @@ class App {
         return this._renderMessage('.message__error');
 
       this._renderMessage();
+
+      // Render drawed lines
+      this.currentDrawing.setLatLngs([]);
+      this.allDrawings.push(this.drawingLayerGroup);
+      this.#coordinates.slice(-1).forEach(coords => {
+        coords.addTo(this.#map);
+      });
 
       workout = new Cycling([lat, lng], distance, duration, elevation);
     }
@@ -628,11 +629,9 @@ class App {
 
     if (!data) return;
 
-    // this.#coordinates = data;
-    console.log(data);
-
     data.forEach(coords => {
       const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+      this.allDrawings.push(coords);
       this.#coordinates.push(polyline);
     });
 
