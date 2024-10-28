@@ -69,7 +69,9 @@ const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const workoutsList = document.querySelector('.workouts__list');
 const clearAll = document.querySelector('.clear__all');
-// const editBtn = document.querySelector('.edit__btn');
+const buttonsContainer = document.querySelector('.buttons__container');
+const messagesContainer = document.querySelector('.messages__container');
+const buttonZoomOut = document.querySelector('.btn__zoom-out');
 
 // CHECKPOINT:
 // APPLICATION ARHITECTURE
@@ -78,26 +80,33 @@ class App {
   #map;
   #mapEvent;
   #mapZoomLevel = 13;
+  #coordinates = [];
   #workouts = [];
   #markers = [];
   #htmlContent = [];
   #isEditing = false;
+  #drawingMode = false;
+  currentDrawing;
+  allDrawings = [];
+  drawingLayerGroup = [];
+  layerGroupContainer = [];
   #index;
   constructor() {
     this._getLocalStorage();
 
     this._getPosition();
-    this._showClearAll();
+    this._showButtons();
     form.addEventListener('submit', this._creatingNewWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToMap.bind(this));
     workoutsList.addEventListener('click', this._deleteWorkout.bind(this));
     workoutsList.addEventListener('click', this._editWorkout.bind(this));
     clearAll.addEventListener('click', this._clearWorkouts.bind(this));
+    buttonsContainer.addEventListener('click', this._addHandlerWorkoutsSort.bind(this));
+    buttonZoomOut.addEventListener('click', this._mapZoomOut.bind(this));
+    document.addEventListener('keydown', this._exitDrawingMode.bind(this));
 
     this._indexDelegation();
-
-    // document.querySelector('.show__all').addEventListener('click', this._showAllMarkers.bind(this));
   }
 
   // CHECKPOINT:
@@ -127,32 +136,64 @@ class App {
     const coords = [latitude, longitude];
 
     // Leaflet library
-    this.#map = L.map('map').setView(coords, 13);
+    this.#map = L.map('map', {
+      // renderer: L.canvas({ padding: 0.5 }),
+    }).setView(coords, 13);
 
     L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.#map);
 
-    this.#map.on('click', this._showForm.bind(this));
+    this.#map.on('click', this._drawingPath.bind(this));
     this.#map.on('click', this._toggleEditing.bind(this, false));
     this.#map.on('click', this._clearAllSelected);
+    // this.#map.on(
+    //   'keydown',
+    //   function (e) {
+    //     if (e.originalEvent.key === 'Escape') {
+    //       this._removeCurrentDraw();
+    //     }
+    //   }.bind(this)
+    // );
+
+    this.currentDrawing = L.polyline([], { color: 'red', opacity: 0.5 }).addTo(this.#map);
 
     this.#workouts.forEach(work => this._renderWorkoutMarker(work));
+
+    // Draw workout path after map is loaded
+    this._getLocalStorageDrawings();
   }
-
-  // _showAllMarkers() {
-  //   const bounds = new L.LatLngBounds();
-
-  //   bounds.extend(this.#markers.getLatLng());
-
-  //   this.#map.fitBounds(bounds);
-  // }
 
   _showForm(mapE) {
-    this.#mapEvent = mapE;
     form.classList.remove('hidden');
-    inputDistance.focus();
+    // inputDistance.focus();
   }
+
+  _drawingPath(mapEvent) {
+    this.#mapEvent = mapEvent;
+
+    if (!this.#drawingMode) {
+      form.classList.add('hidden');
+      this.drawingLayerGroup = [];
+      this.#drawingMode = true;
+    }
+
+    this.drawingLayerGroup.push(Object.values(mapEvent.latlng));
+
+    this.currentDrawing.setLatLngs(this.drawingLayerGroup);
+  }
+
+  _exitDrawingMode(e) {
+    if (e.key === 'Enter' && this.#drawingMode) {
+      this.#coordinates.push(L.polyline(this.drawingLayerGroup, { color: 'red', opacity: 0.5 }));
+      this.#drawingMode = false;
+      this._showForm();
+    }
+  }
+
+  // _removeCurrentDraw() {
+  //   this.#drawingMode = false;
+  // }
 
   _hideForm() {
     form.style.display = 'none';
@@ -192,8 +233,23 @@ class App {
     if (!this.#isEditing) {
       this._newWorkout();
     } else {
+      this._renderMessage('.message__edit');
       this._editSubmit();
     }
+  }
+
+  // Zoom out map view to see all markers
+  _mapZoomOut() {
+    if (this.#markers) return;
+
+    // New array with position of all markers
+    const latLngs = this.#markers.map(marker => marker.getLatLng());
+
+    // Creates a LatLngBounds object defined by the geographical points it contains.
+    const bounds = L.latLngBounds(latLngs);
+
+    // Set map view to bounds
+    this.#map.fitBounds(bounds);
   }
 
   _newWorkout() {
@@ -213,9 +269,21 @@ class App {
     // If type running, create running object
     if (type === 'running') {
       const cadence = +inputCadence.value;
-      // Check is data is valid
+      // Check if data is valid
       if (!isInputValid(distance, duration, cadence) || !isPositive(distance, duration, cadence))
-        return alert('Data needs to be positive numbers!');
+        // return alert('Data needs to be positive numbers!');
+        return this._renderMessage('.message__error');
+
+      this._renderMessage();
+
+      // Render drawed lines
+      this.currentDrawing.setLatLngs([]);
+      this.allDrawings.push(this.drawingLayerGroup);
+      this.#coordinates.slice(-1).forEach(coords => {
+        coords.addTo(this.#map);
+        // const polyline = L.polyline(coords._latlngs, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+        // const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+      });
 
       workout = new Running([lat, lng], distance, duration, cadence);
     }
@@ -225,7 +293,10 @@ class App {
       const elevation = +inputElevation.value;
       // Check is data is valid
       if (!isInputValid(distance, duration, elevation) || !isPositive(distance, duration))
-        return alert('Data needs to be positive numbers!');
+        // return alert('Data needs to be positive numbers!');
+        return this._renderMessage('.message__error');
+
+      this._renderMessage();
 
       workout = new Cycling([lat, lng], distance, duration, elevation);
     }
@@ -240,14 +311,14 @@ class App {
     this._renderWorkout(workout);
 
     // Check for clear all
-    this._showClearAll();
+    this._showButtons();
 
     // Data local storage
     this._setLocalStorage();
+    this._setLocalStorageDrawings();
 
     // Clear form + input fields
     this._hideForm();
-    console.log(this.#workouts);
   }
 
   // Show workout marker on map
@@ -327,6 +398,37 @@ class App {
     this._indexDelegation();
   }
 
+  // Render succes or error message when submiting form
+  _renderMessage(messageBox = '.message__succes') {
+    const message = messagesContainer.querySelector(messageBox);
+
+    if (!message) return;
+
+    // message.classList.add('hidden');
+    message.classList.remove('hidden');
+    message.classList.add('show');
+
+    message.addEventListener('click', function (e) {
+      const closeBtn = e.target.closest('.close__btn-message');
+      if (!closeBtn) return;
+
+      message.classList.add('hidden');
+    });
+
+    const timer = seconds => new Promise(response => setTimeout(response, seconds));
+
+    timer(1000)
+      .then(() => {
+        message.classList.remove('show');
+        message.classList.add('hide');
+        return timer(1000);
+      })
+      .then(() => {
+        message.classList.remove('hide');
+        message.classList.add('hidden');
+      });
+  }
+
   // Move to map marker when clicking workout from list
   _moveToMap(e) {
     const workoutEl = e.target.closest('.workout');
@@ -379,15 +481,21 @@ class App {
     this.#markers.splice(index, 1);
 
     // Check for clear all
-    this._showClearAll();
+    this._showButtons();
 
     // hide from
     this._hideForm();
 
     this._indexDelegation();
 
+    this.#coordinates[index].remove();
+    this.#coordinates.splice(index, 1);
+
     // remove from local storage
     this._setLocalStorage();
+    this._setLocalStorageDrawings();
+
+    // console.log(this.#coordinates);
   }
 
   // Edit existing workout on list
@@ -482,12 +590,22 @@ class App {
 
     this._indexDelegation();
 
-    this._setLocalStorage();
+    // this._setLocalStorage();
   }
 
   // Local storage
   _setLocalStorage() {
     localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _setLocalStorageDrawings() {
+    // const arrayCoords = this.#coordinates.reduce((acc, curr, index) => {
+    //   acc[index] = curr._latlngs;
+    //   return acc;
+    // });
+    // console.log(arrayCoords);
+
+    localStorage.setItem('drawings', JSON.stringify(this.allDrawings));
   }
 
   _getLocalStorage() {
@@ -501,21 +619,74 @@ class App {
     });
 
     this.#workouts = this.#data;
-    console.log(this.#workouts);
 
     this.#workouts.forEach(work => this._renderWorkout(work));
   }
 
-  _showClearAll() {
-    this.#workouts.length >= 1
-      ? clearAll.classList.remove('clear__all--hidden')
-      : clearAll.classList.add('clear__all--hidden');
+  _getLocalStorageDrawings() {
+    const data = JSON.parse(localStorage.getItem('drawings'));
+
+    if (!data) return;
+
+    // this.#coordinates = data;
+    console.log(data);
+
+    data.forEach(coords => {
+      const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+      this.#coordinates.push(polyline);
+    });
+
+    // this.#coordinates.forEach(coords => {
+    //   const polyline = L.polyline(coords, { color: 'red', opacity: 0.5 }).addTo(this.#map);
+    //   // this.layerGroupContainer.push(polyline);
+    // });
+  }
+
+  _showButtons() {
+    this.#workouts.length >= 1 ? buttonsContainer.classList.remove('hidden') : buttonsContainer.classList.add('hidden');
   }
 
   // Clear local storage data
   _clearWorkouts() {
     localStorage.clear();
     location.reload();
+  }
+
+  _addHandlerWorkoutsSort(event) {
+    const btn = event.target.closest('.btn__sort');
+    if (!btn) return;
+    btn.classList.toggle('active__sort');
+
+    // Checking if button is already sorting list
+    const isActive = btn.classList.contains('active__sort');
+    // Checking if clicked button is for duration or distance sort
+    const sortingByDuration = [btn.classList].join('').includes('duration');
+
+    // If other buttons are active when clicking other button, throw them to default
+    buttonsContainer.querySelectorAll('button').forEach(button => {
+      if (button.classList.contains('active__sort') && button !== btn) {
+        button.classList.remove('active__sort');
+        button.children[0].innerHTML = '&#8595;';
+      }
+    });
+
+    // Button arrow direction, UP or DOWN
+    const arrowDirection = isActive ? '&#8593;' : '&#8595;';
+    btn.children[0].innerHTML = arrowDirection;
+
+    // Clearing view
+    workoutsList.innerHTML = '';
+
+    // If sort by value or render default
+    if (isActive) {
+      const newArray = this.#workouts.slice().sort((a, b) => {
+        // Sort by duration or distance
+        return sortingByDuration ? b.duration - a.duration : b.distance - a.distance;
+      });
+      newArray.forEach(work => this._renderWorkout(work));
+    } else {
+      this.#workouts.forEach(work => this._renderWorkout(work));
+    }
   }
 }
 

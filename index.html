@@ -17,7 +17,12 @@
     <div class="sidebar">
       <img src="logo.png" alt="Logo" class="logo" />
 
-      <button class="clear__all clear__all--hidden"><span>&times;</span> Clear All</button>
+      <div class="buttons__container hidden">
+        <button class="btn__sort btn__sort-distance">Distance <span>&#8595;</span></button>
+        <button class="btn__sort btn__sort-duration">Duration <span>&#8595;</span></button>
+        <hr />
+        <button class="clear__all">Clear All <span>&times;</span></button>
+      </div>
 
       <ul class="workouts">
         <form class="form hidden">
@@ -103,8 +108,25 @@
         <a class="twitter-link" target="_blank" href="https://twitter.com/jonasschmedtman">Jonas Schmedtmann</a>. Use
         for learning or your portfolio. Don't use to teach. Don't claim as your own.
       </p>
+
+      <div class="messages__container">
+        <div class="message message__error hidden">
+          Wrong data format!
+          <span class="close__btn-message">&times;</span>
+        </div>
+        <div class="message message__succes hidden">
+          Workout succesfully added.
+          <span class="close__btn-message">&times;</span>
+        </div>
+        <div class="message message__edit hidden">
+          Workout succesfully edited.
+          <span class="close__btn-message">&times;</span>
+        </div>
+      </div>
     </div>
 
-    <div id="map"></div>
+    <div id="map">
+      <span class="btn__zoom-out">&#9974;</span>
+    </div>
   </body>
 </html>

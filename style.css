@@ -206,28 +206,6 @@ a:visited {
   background-color: #718072;
 }
 
-.clear__all {
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  position: absolute;
-  color: #ffffff5c;
-  font-size: 15px;
-  right: 5.1rem;
-  top: 9.5rem;
-}
-
-.close__btn:hover,
-.clear__all:hover,
-.edit__btn:hover {
-  color: #aaa;
-}
-
-.clear__all--hidden {
-  display: none;
-}
-
 .copyright {
   margin-top: auto;
   font-size: 1.3rem;
@@ -274,4 +252,100 @@ a:visited {
 }
 .cycling-popup .leaflet-popup-content-wrapper {
   border-left: 5px solid var(--color-brand--1);
+}
+
+.buttons__container {
+  display: flex;
+  justify-content: flex-end;
+  column-gap: 15px;
+  margin: 1rem 0;
+}
+
+button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  color: #aaa;
+}
+
+.hidden {
+  display: none;
+}
+
+.message {
+  position: absolute;
+  top: 1rem;
+  z-index: 999;
+  padding: 1rem 2rem;
+  font-size: 12px;
+  border-radius: 2px;
+}
+
+.show {
+  animation: show_message 1s ease forwards;
+}
+
+@keyframes show_message {
+  0% {
+    transform: translateY(-200%);
+  }
+}
+
+.hide {
+  animation: hide_message 1s ease forwards;
+}
+
+@keyframes hide_message {
+  100% {
+    opacity: 0%;
+  }
+}
+
+.message__error {
+  background-color: #da3d3d;
+  right: 35%;
+}
+
+.message__succes {
+  background-color: #00c46a;
+  right: 30%;
+}
+
+.message__edit {
+  background-color: #007cc4;
+  right: 30%;
+}
+
+.close__btn-message {
+  position: absolute;
+  top: -6px;
+  right: 5px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.btn__zoom-out {
+  background-color: #fff;
+  color: #000;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  shape-rendering: auto;
+  font-size: 25px;
+
+  z-index: 999;
+  padding: 0 0.45rem;
+  line-height: 1.2;
+  cursor: pointer;
+
+  position: absolute;
+  top: 8rem;
+  left: 1rem;
+}
+
+.btn__zoom-out:hover {
+  background-color: #e9e9e9;
 }
