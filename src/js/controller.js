@@ -137,9 +137,13 @@ const controlWorkoutsSorting = function (event) {
 };
 
 // Show workout marker on map
-const renderWorkoutMarker = function (workout) {
-  const mark = sidebarView.generateWorkoutMarker(workout);
+const renderWorkoutMarker = async function (workout) {
+  workout.adress = workout.adress ?? (await model.reverseGeocode(...workout.coords));
+
+  const mark = mapView.generateWorkoutMarker(workout);
   model.state.markers.push(mark);
+
+  model.setLocalStorage(model.state.workouts, 'workouts');
 };
 
 // // Move to map marker when clicking workout from list

@@ -2,7 +2,6 @@ import mapView from './mapView';
 
 const form = document.querySelector('.form');
 const containerWorkouts = document.querySelector('.workouts');
-const formInputs = document.querySelectorAll('.form__input');
 const inputType = document.querySelector('.form__input--type');
 const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
@@ -296,26 +295,6 @@ class SidebarView {
     );
   }
 
-  // Show workout marker on map
-  generateWorkoutMarker(workout) {
-    if (!workout) return;
-
-    let mark = L.marker(workout.coords)
-      .addTo(this._data.map)
-      .bindPopup(
-        L.popup({
-          maxWidth: 250,
-          minWidth: 100,
-          autoClose: false,
-          closeOnClick: false,
-          className: `${workout.type}-popup`,
-        })
-      )
-      .setPopupContent(workout.description)
-      .openPopup();
-    return mark;
-  }
-
   // Move to map marker when clicking workout from list
   moveToMarker(e) {
     const workoutEl = e.target.closest('.workout');
@@ -417,7 +396,7 @@ class SidebarView {
     location.reload();
   }
 
-  // Adding event handlers ////////////////////////////////////////////////////////////////////////
+  // Adding event handlers CHECKPOINT:////////////////////////////////////////////////////////////////////
   addHandlerWorkoutsSort(handler) {
     buttonsContainer.addEventListener('click', handler);
   }

@@ -34,6 +34,26 @@ class MapView {
     this._data.workouts.forEach(work => renderMarkerHandler(work));
   }
 
+  // Show workout marker on map
+  generateWorkoutMarker(workout) {
+    if (!workout) return;
+
+    let mark = L.marker(workout.coords)
+      .addTo(this._data.map)
+      .bindPopup(
+        L.popup({
+          maxWidth: 250,
+          minWidth: 100,
+          autoClose: false,
+          closeOnClick: false,
+          className: `${workout.type}-popup`,
+        })
+      )
+      .setPopupContent(workout.adress)
+      .openPopup();
+    return mark;
+  }
+
   // Zoom out map view to see all markers
   showAllMarkers(markersData) {
     if (!markersData) return;

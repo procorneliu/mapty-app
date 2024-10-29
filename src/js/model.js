@@ -1,5 +1,7 @@
 // Imports
 import L from 'leaflet';
+// For reverse geocode
+import Nominatim from 'nominatim-client';
 
 // All page data are managed here
 export const state = {
@@ -40,6 +42,10 @@ class Workout {
       months[this.date.getMonth()]
     } ${this.date.getDate()}`;
   }
+
+  async _setLocationAdress(lat, lng) {
+    this.adress = this.adress ?? (await reverseGeocode(lat, lng));
+  }
 }
 
 export class Running extends Workout {
@@ -49,6 +55,7 @@ export class Running extends Workout {
     this.cadence = cadence;
     this.calcPace();
     this._setDescription(this.type);
+    this._setLocationAdress(...this.coords);
   }
 
   calcPace() {
@@ -65,6 +72,7 @@ export class Cycling extends Workout {
     this.elevationGain = elevationGain;
     this.calcSpeed();
     this._setDescription(this.type);
+    this._setLocationAdress(...this.coords);
   }
 
   calcSpeed() {
@@ -73,7 +81,6 @@ export class Cycling extends Workout {
     return this.speed;
   }
 }
-
 //CHECKPOINT:///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -113,6 +120,23 @@ export const removingWorkoutData = function (index) {
   // remove from local storage
   setLocalStorage(state.workouts, 'workouts');
   setLocalStorage(state.allDrawings, 'drawings');
+};
+
+export const reverseGeocode = async function (latitude, longitude) {
+  try {
+    const client = Nominatim.createClient({ useragent: 'mapty-app' });
+
+    const results = await client.reverse({
+      lat: latitude,
+      lon: longitude,
+    });
+
+    const adressFormat = `${results.address.road}, ${results.address.city}, ${results.address.country}`;
+
+    return adressFormat;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 // Save data in local storage

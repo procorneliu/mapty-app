@@ -3,6 +3,6 @@ dist/
 .parcel-cache/
 .vscode/
 .DS_Store
-Mapty-architecture-final.png
-Mapty-architecture-part-1.png
-Mapty-flowchart.png
+src/images/Mapty-architecture-final.png
+src/images/Mapty-architecture-part-1.png
+src/images/Mapty-flowchart.png
