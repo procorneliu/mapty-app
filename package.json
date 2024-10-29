@@ -4,16 +4,17 @@
   "description": "Sport activities application",
   "scripts": {
     "start": "parcel index.html",
+    "clean": "rm -rf .parcel-cache",
     "build": "parcel build index.html --dist-dir ./dist"
   },
   "author": "Corneliu Procopenco",
   "license": "ISC",
   "devDependencies": {
-    "parcel": "^2.12.0"
+    "core-js": "^3.38.1",
+    "parcel": "^2.12.0",
+    "regenerator-runtime": "^0.14.1"
   },
   "dependencies": {
-    "core-js": "^3.38.1",
-    "leaflet": "^1.9.4",
-    "regenerator-runtime": "^0.14.1"
+    "leaflet": "^1.9.4"
   }
 }
