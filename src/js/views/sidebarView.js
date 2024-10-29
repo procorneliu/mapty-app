@@ -20,11 +20,19 @@ class SidebarView {
   _errorMessage = 'Wrong data format!';
   _message = 'Workout succesfully added.';
 
+  constructor() {
+    // Initialization functions
+    this.addHandlerClearAll();
+    this.addHandlerInputType();
+  }
+
   getData(data) {
     this._data = data;
   }
 
   generateWorkoutMarkup(workout) {
+    if (!workout) return;
+
     let html = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
     <span class="close__btn">&times;</span>
@@ -163,7 +171,7 @@ class SidebarView {
     }
   }
 
-  subtmitWorkoutEdit() {
+  submitWorkoutEdit() {
     const content = this._data.htmlContent[this._data.index];
     const work = this._data.workouts[this._data.index];
 
@@ -255,8 +263,43 @@ class SidebarView {
     }
   }
 
+  deleteWorkout(e) {
+    const workoutEl = e.target.closest('.close__btn');
+    if (!workoutEl) return;
+
+    const workout = this._data.workouts.find(work => work.id === workoutEl.closest('.workout').dataset.id);
+    if (!workout) return;
+
+    const index = this._data.workouts.findIndex(work => work.id === workout.id);
+
+    workoutsList.innerHTML = '';
+
+    return index;
+  }
+
+  adjacentHTMLControler(htmlElements) {
+    htmlElements.forEach(html => {
+      workoutsList.insertAdjacentHTML('afterbegin', html);
+    });
+  }
+
+  controlStateIndex(handler) {
+    workoutsList.querySelectorAll('.edit__btn').forEach((btn, i) =>
+      btn.addEventListener(
+        'click',
+        function () {
+          // invert index
+          const index = Math.abs(i - (state.htmlContent.length - 1));
+          handler(index);
+        }.bind(this)
+      )
+    );
+  }
+
   // Show workout marker on map
   generateWorkoutMarker(workout) {
+    if (!workout) return;
+
     let mark = L.marker(workout.coords)
       .addTo(this._data.map)
       .bindPopup(
@@ -372,6 +415,31 @@ class SidebarView {
   clearWorkouts() {
     localStorage.clear();
     location.reload();
+  }
+
+  // Adding event handlers ////////////////////////////////////////////////////////////////////////
+  addHandlerWorkoutsSort(handler) {
+    buttonsContainer.addEventListener('click', handler);
+  }
+
+  addHandlerWorkoutsList(handler) {
+    workoutsList.addEventListener('click', handler);
+  }
+
+  addHandlerContainerWorkouts(handler) {
+    containerWorkouts.addEventListener('click', handler);
+  }
+
+  addHandlerFormSubmit(handler) {
+    form.addEventListener('submit', handler);
+  }
+
+  addHandlerInputType() {
+    inputType.addEventListener('change', this.toggleElevationField);
+  }
+
+  addHandlerClearAll() {
+    clearAll.addEventListener('click', this.clearWorkouts);
   }
 }
 

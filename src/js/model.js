@@ -1,6 +1,5 @@
 // Imports
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 // All page data are managed here
 export const state = {
@@ -93,21 +92,27 @@ export const toggleEditingMode = function (bool, input) {
 };
 
 // Getting index of clicked workout from workouts list
-export const controlStateIndex = function (parentElement) {
-  parentElement.querySelectorAll('.edit__btn').forEach((btn, i) =>
-    btn.addEventListener(
-      'click',
-      function () {
-        // invert index
-        state.index = Math.abs(i - (state.htmlContent.length - 1));
-      }.bind(this)
-    )
-  );
+export const setStateIndex = function (index) {
+  state.index = index;
 };
 
 export const exitDrawingMode = function () {
   state.polylinesGroup.push(L.polyline(state.drawingUpdater, { color: 'red', opacity: 0.5 }));
   state.drawingMode = false;
+};
+
+export const removingWorkoutData = function (index) {
+  // remove marker from map and array
+  state.map.removeLayer(state.markers[index]);
+  state.markers.splice(index, 1);
+
+  state.polylinesGroup[index].remove();
+  state.polylinesGroup.splice(index, 1);
+  state.allDrawings.splice(index, 1);
+
+  // remove from local storage
+  setLocalStorage(state.workouts, 'workouts');
+  setLocalStorage(state.allDrawings, 'drawings');
 };
 
 // Save data in local storage
@@ -118,10 +123,11 @@ export const setLocalStorage = function (data, storageItem) {
 // Get workouts data stored in local storge
 const controlWorkoutStorage = function () {
   state.data = JSON.parse(localStorage.getItem('workouts'));
-
   if (!state.data) return;
 
   state.data.map(data => {
+    if (!data) return;
+
     if (data.type === 'running') Object.setPrototypeOf(data, Running.prototype);
     if (data.type === 'cycling') Object.setPrototypeOf(data, Cycling.prototype);
   });
@@ -137,6 +143,7 @@ export const controlDrawingsStorage = function () {
   if (!data) return;
 
   data.forEach((coords, i) => {
+    if (!workoutsData[i]) return;
     const polyline = L.polyline(coords, {
       color: `${workoutsData[i].type === 'running' ? '#00c46a' : '#ffb545'} `,
     }).addTo(state.map);

@@ -4,20 +4,6 @@ import sidebarView from './views/sidebarView';
 import mapView from './views/mapView';
 
 ////////////////////////////////////////////////////////////
-const form = document.querySelector('.form');
-const containerWorkouts = document.querySelector('.workouts');
-const formInputs = document.querySelectorAll('.form__input');
-const inputType = document.querySelector('.form__input--type');
-const inputDistance = document.querySelector('.form__input--distance');
-const inputDuration = document.querySelector('.form__input--duration');
-const inputCadence = document.querySelector('.form__input--cadence');
-const inputElevation = document.querySelector('.form__input--elevation');
-const workoutsList = document.querySelector('.workouts__list');
-const clearAll = document.querySelector('.clear__all');
-const buttonsContainer = document.querySelector('.buttons__container');
-const messagesContainer = document.querySelector('.messages__container');
-const buttonZoomOut = document.querySelector('.btn__zoom-out');
-
 // APPLICATION CHECKPOINT:
 
 const controlMap = function (position) {
@@ -38,7 +24,7 @@ const drawingPath = function (mapEvent) {
   model.state.mapEvent = mapEvent;
 
   if (!model.state.drawingMode) {
-    form.classList.add('hidden');
+    sidebarView.hideForm();
     model.state.drawingUpdater = [];
     model.state.drawingMode = true;
   }
@@ -76,6 +62,7 @@ const controlMapZoomOut = function () {
 
 const controlWorkouts = function () {
   const workout = sidebarView.newWorkout(createRunningObject, createCyclingObject);
+  if (!workout) return;
 
   // Push workout to workouts array
   model.state.workouts.push(workout);
@@ -97,72 +84,39 @@ const controlWorkouts = function () {
   sidebarView.hideForm();
 };
 
-// Show workout marker on map
-const renderWorkoutMarker = function (workout) {
-  const mark = sidebarView.generateWorkoutMarker(workout);
-  model.state.markers.push(mark);
-};
-
 // Show workout on list after completing form
 const renderWorkout = function (workout) {
   const html = sidebarView.generateWorkoutMarkup(workout);
 
   model.state.htmlContent.push(html);
-  workoutsList.insertAdjacentHTML('afterbegin', html);
 
-  model.controlStateIndex(workoutsList);
-};
+  sidebarView.adjacentHTMLControler([html]);
 
-// // Move to map marker when clicking workout from list
-const controlMoveToMap = function (event) {
-  sidebarView.moveToMarker(event);
+  sidebarView.controlStateIndex(model.setStateIndex);
 };
 
 // Delete workout by 'x' button
-const controlDeleteWorkout = function (e) {
-  const workoutEl = e.target.closest('.close__btn');
-  if (!workoutEl) return;
-
-  const workout = model.state.workouts.find(work => work.id === workoutEl.closest('.workout').dataset.id);
-  if (!workout) return;
-
-  const index = model.state.workouts.findIndex(work => work.id === workout.id);
-
-  workoutsList.innerHTML = '';
-
-  // Check for clear all
-  sidebarView.showButtons(model.state.workouts);
-
-  // hide from
-  sidebarView.hideForm();
+const controlDeleteWorkout = function (event) {
+  const index = sidebarView.deleteWorkout(event);
 
   // remove workout from list
   model.state.workouts.splice(index, 1);
   model.state.htmlContent.splice(index, 1);
 
-  model.state.htmlContent.slice().forEach(html => {
-    workoutsList.insertAdjacentHTML('afterbegin', html);
-  });
+  // insert updated workout to view
+  sidebarView.adjacentHTMLControler(model.state.htmlContent);
 
-  // remove marker from map and array
-  model.state.map.removeLayer(model.state.markers[index]);
-  model.state.markers.splice(index, 1);
+  // setting id number for each workout
+  sidebarView.controlStateIndex(model.setStateIndex);
 
-  // // Check for clear all
-  // sidebarView.showButtons(model.state.workouts);
+  // remove marker from map and storage
+  model.removingWorkoutData(index);
 
-  // // hide from
-  // sidebarView.hideForm();
+  // hide from
+  sidebarView.hideForm();
 
-  model.controlStateIndex(workoutsList);
-
-  model.state.polylinesGroup[index].remove();
-  model.state.polylinesGroup.splice(index, 1);
-  model.state.allDrawings.splice(index, 1);
-
-  // remove from local storage
-  model.setLocalStorage(model.state.workouts, 'workouts');
-  model.setLocalStorage(model.state.allDrawings, 'drawings');
+  // Check for clear all
+  sidebarView.showButtons(model.state.workouts);
 };
 
 // Edit existing workout on list
@@ -171,15 +125,26 @@ const controlEditWorkout = function (event) {
 };
 
 const editSubmit = function () {
-  sidebarView.subtmitWorkoutEdit();
+  sidebarView.submitWorkoutEdit();
 
-  model.controlStateIndex(workoutsList);
+  sidebarView.controlStateIndex(model.setStateIndex);
 
   model.setLocalStorage(model.state.workouts, 'workouts');
 };
 
 const controlWorkoutsSorting = function (event) {
   sidebarView.workoutsSort(event, renderWorkout);
+};
+
+// Show workout marker on map
+const renderWorkoutMarker = function (workout) {
+  const mark = sidebarView.generateWorkoutMarker(workout);
+  model.state.markers.push(mark);
+};
+
+// // Move to map marker when clicking workout from list
+const controlMoveToMap = function (event) {
+  sidebarView.moveToMarker(event);
 };
 
 // Acces RUNNING class from model
@@ -201,20 +166,18 @@ const controlLocalStorage = function () {
 const init = function () {
   controlLocalStorage();
 
-  model.controlStateIndex(workoutsList);
+  model.getUserLocation(controlMap);
+  sidebarView.controlStateIndex(model.setStateIndex);
   sidebarView.getData(model.state);
   mapView.getData(model.state);
-  model.getUserLocation(controlMap);
-  sidebarView.showButtons(model.state.workouts);
 
-  form.addEventListener('submit', creatingNewWorkout);
-  inputType.addEventListener('change', sidebarView.toggleElevationField);
-  containerWorkouts.addEventListener('click', controlMoveToMap);
-  workoutsList.addEventListener('click', controlDeleteWorkout);
-  workoutsList.addEventListener('click', controlEditWorkout);
-  clearAll.addEventListener('click', sidebarView.clearWorkouts);
-  buttonsContainer.addEventListener('click', controlWorkoutsSorting);
-  buttonZoomOut.addEventListener('click', controlMapZoomOut);
-  document.addEventListener('keydown', controlDrawingMode);
+  sidebarView.showButtons(model.state.workouts);
+  sidebarView.addHandlerFormSubmit(creatingNewWorkout);
+  sidebarView.addHandlerContainerWorkouts(controlMoveToMap);
+  sidebarView.addHandlerWorkoutsList(controlDeleteWorkout);
+  sidebarView.addHandlerWorkoutsList(controlEditWorkout);
+  sidebarView.addHandlerWorkoutsSort(controlWorkoutsSorting);
+  mapView.addHandlerZoomAll(controlMapZoomOut);
+  mapView.addHandlerDrawingMode(controlDrawingMode);
 };
 init();

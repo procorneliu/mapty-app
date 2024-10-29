@@ -57,6 +57,15 @@ class MapView {
 
     coords.addTo(stateData.map);
   }
+
+  // Adding event handlers ////////////////////////////////////////////////////////////////////////
+  addHandlerZoomAll(handler) {
+    buttonZoomOut.addEventListener('click', handler);
+  }
+
+  addHandlerDrawingMode(handler) {
+    document.addEventListener('keydown', handler);
+  }
 }
 
 export default new MapView();
