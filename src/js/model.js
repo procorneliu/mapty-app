@@ -105,6 +105,11 @@ export const controlStateIndex = function (parentElement) {
   );
 };
 
+export const exitDrawingMode = function () {
+  state.polylinesGroup.push(L.polyline(state.drawingUpdater, { color: 'red', opacity: 0.5 }));
+  state.drawingMode = false;
+};
+
 // Save data in local storage
 export const setLocalStorage = function (data, storageItem) {
   localStorage.setItem(storageItem, JSON.stringify(data));
