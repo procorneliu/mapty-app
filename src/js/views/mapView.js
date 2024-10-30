@@ -1,4 +1,4 @@
-import L from 'leaflet';
+import L, { popup } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Set custom options for the default icons
@@ -34,10 +34,31 @@ class MapView {
     this._data.workouts.forEach(work => renderMarkerHandler(work));
   }
 
+  generateWeather() {
+    return `<div class="weather__container hidden">
+        <h4>Weather at workout time:</h4>
+        <div class="weather_dates__container">
+          <div class="temperature__data">
+            <p>+13 <span>&#8451;</span></p>
+          </div>
+          <div class="wind__speed__data">
+            <p>1 m/s <span>&#127811;</span></p>
+          </div>
+          <div class="humidity__data">
+            <p>72% <span>&#128167;</span></p>
+          </div>
+        </div>
+      </div>`;
+  }
+
   // Show workout marker on map
-  generateWorkoutMarker(workout) {
+  async generateWorkoutMarker(workout) {
     if (!workout) return;
 
+    // when popup is close, hover doesn't work. Open as default
+    let isPopupOpen = true;
+
+    // creating marker and adding to map
     let mark = L.marker(workout.coords)
       .addTo(this._data.map)
       .bindPopup(
@@ -49,8 +70,30 @@ class MapView {
           className: `${workout.type}-popup`,
         })
       )
-      .setPopupContent(workout.adress)
+      .setPopupContent(workout.adress ?? 'loading...')
       .openPopup();
+
+    mark.on('popupopen', function () {
+      isPopupOpen = true;
+    });
+
+    mark.on('popupclose', function () {
+      isPopupOpen = false;
+    });
+
+    // Show weather data at workout time when hovering over marker
+    mark.on('mouseover', function () {
+      if (!isPopupOpen) return;
+      const weatherString = String(
+        `${workout.weather.temp} &#8451;, ${workout.weather.wind}m/s &#127811;, ${workout.weather.humidity}% &#128167;`
+      );
+      mark.setPopupContent(weatherString).openPopup();
+    });
+    mark.on('mouseout', function () {
+      if (!isPopupOpen) return;
+      mark.setPopupContent(workout.adress).openPopup();
+    });
+
     return mark;
   }
 

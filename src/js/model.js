@@ -1,5 +1,6 @@
 // Imports
 import L from 'leaflet';
+import { API_KEY, API_URL } from './config';
 // For reverse geocode
 import Nominatim from 'nominatim-client';
 
@@ -20,7 +21,6 @@ export const state = {
   polylinesGroup: [],
   allDrawings: [],
 };
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //CHECKPOINT://////////////////////////////////////////////////////////////////////////////////
 
@@ -46,6 +46,10 @@ class Workout {
   async _setLocationAdress(lat, lng) {
     this.adress = this.adress ?? (await reverseGeocode(lat, lng));
   }
+
+  async _getLocationWeather(lat, lng) {
+    this.weather = this.weather ?? (await weatherData(lat, lng));
+  }
 }
 
 export class Running extends Workout {
@@ -56,6 +60,7 @@ export class Running extends Workout {
     this.calcPace();
     this._setDescription(this.type);
     this._setLocationAdress(...this.coords);
+    this._getLocationWeather(...this.coords);
   }
 
   calcPace() {
@@ -73,6 +78,7 @@ export class Cycling extends Workout {
     this.calcSpeed();
     this._setDescription(this.type);
     this._setLocationAdress(...this.coords);
+    this._getLocationWeather(...this.coords);
   }
 
   calcSpeed() {
@@ -144,13 +150,31 @@ export const reverseGeocode = async function (latitude, longitude) {
       lon: longitude,
     });
 
-    const adressFormat = `${results.address.road}, ${results.address.city ? results.address.city + ', ' : ''}${
-      results.address.country
-    }`;
+    const adressFormat = `${results.address.road ? results.address.road + ', ' : ''}${
+      results.address.city ? results.address.city + ', ' : ''
+    }${results.address.country}`;
 
     return adressFormat;
   } catch (error) {
     console.error(error);
+  }
+};
+
+export const weatherData = async function (lat, lng) {
+  try {
+    const fetchPro = fetch(`${API_URL}weather?units=metric&lat=${lat}&lon=${lng}&appid=${API_KEY}`);
+
+    const res = await fetchPro;
+    const data = await res.json();
+
+    const weatherData = {
+      temp: data.main.temp,
+      wind: data.wind.speed,
+      humidity: data.main.humidity,
+    };
+    return weatherData;
+  } catch (error) {
+    console.log(error);
   }
 };
 

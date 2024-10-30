@@ -143,9 +143,13 @@ const controlWorkoutsSorting = function (event) {
 
 // Show workout marker on map
 const renderWorkoutMarker = async function (workout) {
+  // workout.adress is not yet defined, until that moment display 'loading...'
+  const mark = mapView.generateWorkoutMarker(workout);
   workout.adress = workout.adress ?? (await model.reverseGeocode(...workout.coords));
 
-  const mark = mapView.generateWorkoutMarker(workout);
+  // Call function again, so when workout data arrives, change popup content
+  mapView.generateWorkoutMarker(workout);
+
   model.state.markers.push(mark);
 
   model.setLocalStorage(model.state.workouts, 'workouts');
