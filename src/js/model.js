@@ -103,6 +103,19 @@ export const setStateIndex = function (index) {
   state.index = index;
 };
 
+// // Getting index of clicked workout from workouts list
+// export const controlStateIndex = function (parentElement) {
+//   parentElement.querySelectorAll('.edit__btn').forEach((btn, i) =>
+//     btn.addEventListener(
+//       'click',
+//       function () {
+//         // invert index
+//         state.index = Math.abs(i - (state.htmlContent.length - 1));
+//       }.bind(this)
+//     )
+//   );
+// };
+
 export const exitDrawingMode = function () {
   state.polylinesGroup.push(L.polyline(state.drawingUpdater, { color: 'red', opacity: 0.5 }));
   state.drawingMode = false;
@@ -131,7 +144,9 @@ export const reverseGeocode = async function (latitude, longitude) {
       lon: longitude,
     });
 
-    const adressFormat = `${results.address.road}, ${results.address.city}, ${results.address.country}`;
+    const adressFormat = `${results.address.road}, ${results.address.city ? results.address.city + ', ' : ''}${
+      results.address.country
+    }`;
 
     return adressFormat;
   } catch (error) {

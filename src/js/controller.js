@@ -5,6 +5,7 @@ import mapView from './views/mapView';
 
 ////////////////////////////////////////////////////////////
 // APPLICATION CHECKPOINT:
+// const workoutsList = document.querySelector('.workouts__list');
 
 const controlMap = function (position) {
   mapView.loadMap(position, renderWorkoutMarker, mapHandler);
@@ -93,11 +94,13 @@ const renderWorkout = function (workout) {
   sidebarView.adjacentHTMLControler([html]);
 
   sidebarView.controlStateIndex(model.setStateIndex);
+  // model.controlStateIndex(workoutsList);
 };
 
 // Delete workout by 'x' button
 const controlDeleteWorkout = function (event) {
   const index = sidebarView.deleteWorkout(event);
+  if (!index) return;
 
   // remove workout from list
   model.state.workouts.splice(index, 1);
@@ -108,6 +111,7 @@ const controlDeleteWorkout = function (event) {
 
   // setting id number for each workout
   sidebarView.controlStateIndex(model.setStateIndex);
+  // model.controlStateIndex(workoutsList);
 
   // remove marker from map and storage
   model.removingWorkoutData(index);
@@ -128,6 +132,7 @@ const editSubmit = function () {
   sidebarView.submitWorkoutEdit();
 
   sidebarView.controlStateIndex(model.setStateIndex);
+  // model.controlStateIndex(workoutsList);
 
   model.setLocalStorage(model.state.workouts, 'workouts');
 };
@@ -170,8 +175,9 @@ const controlLocalStorage = function () {
 const init = function () {
   controlLocalStorage();
 
-  model.getUserLocation(controlMap);
   sidebarView.controlStateIndex(model.setStateIndex);
+  // model.controlStateIndex(workoutsList);
+  model.getUserLocation(controlMap);
   sidebarView.getData(model.state);
   mapView.getData(model.state);
 

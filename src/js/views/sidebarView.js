@@ -288,7 +288,7 @@ class SidebarView {
         'click',
         function () {
           // invert index
-          const index = Math.abs(i - (state.htmlContent.length - 1));
+          const index = Math.abs(i - (this._data.htmlContent.length - 1));
           handler(index);
         }.bind(this)
       )
