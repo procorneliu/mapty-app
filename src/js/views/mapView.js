@@ -1,3 +1,4 @@
+// Imports
 import L, { popup } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,10 +13,12 @@ const buttonZoomOut = document.querySelector('.btn__zoom-out');
 class MapView {
   _data;
 
+  // getting path to app state
   getData(data) {
     this._data = data;
   }
 
+  // Loading map
   loadMap(position, renderMarkerHandler, clickHandler) {
     const { latitude, longitude } = position.coords;
     const coords = [latitude, longitude];
@@ -27,6 +30,7 @@ class MapView {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this._data.map);
 
+    // when clicking on map
     this._data.map.on('click', clickHandler);
 
     this._data.currentDrawing = L.polyline([], { color: 'red', opacity: 0.4 }).addTo(this._data.map);
@@ -34,25 +38,8 @@ class MapView {
     this._data.workouts.forEach(work => renderMarkerHandler(work));
   }
 
-  generateWeather() {
-    return `<div class="weather__container hidden">
-        <h4>Weather at workout time:</h4>
-        <div class="weather_dates__container">
-          <div class="temperature__data">
-            <p>+13 <span>&#8451;</span></p>
-          </div>
-          <div class="wind__speed__data">
-            <p>1 m/s <span>&#127811;</span></p>
-          </div>
-          <div class="humidity__data">
-            <p>72% <span>&#128167;</span></p>
-          </div>
-        </div>
-      </div>`;
-  }
-
   // Show workout marker on map
-  async generateWorkoutMarker(workout) {
+  generateWorkoutMarker(workout) {
     if (!workout) return;
 
     // when popup is close, hover doesn't work. Open as default
@@ -83,14 +70,18 @@ class MapView {
 
     // Show weather data at workout time when hovering over marker
     mark.on('mouseover', function () {
+      // only if popup is open
       if (!isPopupOpen) return;
       const weatherString = String(
         `${workout.weather.temp} &#8451;, ${workout.weather.wind}m/s &#127811;, ${workout.weather.humidity}% &#128167;`
       );
+      // show weather data
       mark.setPopupContent(weatherString).openPopup();
     });
     mark.on('mouseout', function () {
+      // only if popup is open
       if (!isPopupOpen) return;
+      // show old popup content
       mark.setPopupContent(workout.adress).openPopup();
     });
 
@@ -109,23 +100,37 @@ class MapView {
     return bounds;
   }
 
+  /**
+   * After adding workout, update with according color
+   * @param {{Object}} stateData - path to state, where are app data are stored
+   * @param {String} color - new color
+   */
   updateDrawings(stateData, color) {
+    // get last drawed lines
     const coords = stateData.polylinesGroup.slice(-1)[0];
 
     stateData.currentDrawing.setLatLngs([]);
     stateData.allDrawings.push(stateData.drawingUpdater);
 
+    // color and opacity options
     coords.options.color = color;
     coords.options.opacity = '1';
 
+    // show drawing on map
     coords.addTo(stateData.map);
   }
 
   // Adding event handlers ////////////////////////////////////////////////////////////////////////
+  // When clicking show all markers button
   addHandlerZoomAll(handler) {
-    buttonZoomOut.addEventListener('click', handler);
+    buttonZoomOut.addEventListener('click', function (e) {
+      e.stopPropagation();
+
+      handler();
+    });
   }
 
+  // When clicking 'enter' key change drawing mode
   addHandlerDrawingMode(handler) {
     document.addEventListener('keydown', handler);
   }

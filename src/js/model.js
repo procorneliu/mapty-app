@@ -1,6 +1,7 @@
 // Imports
 import L from 'leaflet';
 import { API_KEY, API_URL } from './config';
+
 // For reverse geocode
 import Nominatim from 'nominatim-client';
 
@@ -90,7 +91,7 @@ export class Cycling extends Workout {
 //CHECKPOINT:///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-// Get location on user browser
+// Get current location of user
 export const getUserLocation = function (succesFunction) {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(succesFunction, function () {
@@ -99,6 +100,7 @@ export const getUserLocation = function (succesFunction) {
   }
 };
 
+// enable/disable editing mode of workout
 export const toggleEditingMode = function (bool, input) {
   state.editingMode = bool;
   input.disabled = bool;
@@ -109,29 +111,17 @@ export const setStateIndex = function (index) {
   state.index = index;
 };
 
-// // Getting index of clicked workout from workouts list
-// export const controlStateIndex = function (parentElement) {
-//   parentElement.querySelectorAll('.edit__btn').forEach((btn, i) =>
-//     btn.addEventListener(
-//       'click',
-//       function () {
-//         // invert index
-//         state.index = Math.abs(i - (state.htmlContent.length - 1));
-//       }.bind(this)
-//     )
-//   );
-// };
-
+// when pressing 'enter' button, save drawed lines and exit from drawing mode
 export const exitDrawingMode = function () {
   state.polylinesGroup.push(L.polyline(state.drawingUpdater, { color: 'red', opacity: 0.5 }));
   state.drawingMode = false;
 };
 
+// when deleting workout, remove from storage and view
 export const removingWorkoutData = function (index) {
   // remove marker from map and array
   state.map.removeLayer(state.markers[index]);
   state.markers.splice(index, 1);
-
   state.polylinesGroup[index].remove();
   state.polylinesGroup.splice(index, 1);
   state.allDrawings.splice(index, 1);
@@ -141,6 +131,7 @@ export const removingWorkoutData = function (index) {
   setLocalStorage(state.allDrawings, 'drawings');
 };
 
+// Translating a location [lattitude, longitude] on the map into address
 export const reverseGeocode = async function (latitude, longitude) {
   try {
     const client = Nominatim.createClient({ useragent: 'mapty-app' });
@@ -160,6 +151,7 @@ export const reverseGeocode = async function (latitude, longitude) {
   }
 };
 
+// Requesting current weather data based on map location
 export const weatherData = async function (lat, lng) {
   try {
     const fetchPro = fetch(`${API_URL}weather?units=metric&lat=${lat}&lon=${lng}&appid=${API_KEY}`);

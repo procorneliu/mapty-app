@@ -5,22 +5,30 @@ import mapView from './views/mapView';
 
 ////////////////////////////////////////////////////////////
 // APPLICATION CHECKPOINT:
-// const workoutsList = document.querySelector('.workouts__list');
 
+// Managing map
 const controlMap = function (position) {
+  // load map
   mapView.loadMap(position, renderWorkoutMarker, mapHandler);
 
   // Draw workout path after map is loaded
   model.controlDrawingsStorage();
 };
 
-// On map click
+/**
+ * All to do when map is clicked
+ * @param {{}} mapEvent - object that contains all information about mouse click on map
+ */
 const mapHandler = function (mapEvent) {
   drawingPath(mapEvent);
   sidebarView.toggleEditingMode(false);
   sidebarView.clearAllSelected();
 };
 
+/**
+ * Function that draws lines on map
+ * @param {{}} mapEvent - object that contains all information about mouse click on map
+ */
 const drawingPath = function (mapEvent) {
   model.state.mapEvent = mapEvent;
 
@@ -35,6 +43,7 @@ const drawingPath = function (mapEvent) {
   model.state.currentDrawing.setLatLngs(model.state.drawingUpdater);
 };
 
+// when 'enter' key is pressed after drawing workout path
 const controlDrawingMode = function (e) {
   if (e.key === 'Enter' && model.state.drawingMode) {
     model.exitDrawingMode();
@@ -42,6 +51,7 @@ const controlDrawingMode = function (e) {
   }
 };
 
+// when pressing 'enter' key, check if that was a new workout created or an edited
 const creatingNewWorkout = function (e) {
   e.preventDefault();
 
@@ -53,14 +63,7 @@ const creatingNewWorkout = function (e) {
   }
 };
 
-// Zoom out map view to see all markers
-const controlMapZoomOut = function () {
-  const bounds = mapView.showAllMarkers(model.state.markers);
-
-  // Set map view to bounds
-  model.state.map.fitBounds(bounds);
-};
-
+// Managing workouts
 const controlWorkouts = function () {
   const workout = sidebarView.newWorkout(createRunningObject, createCyclingObject);
   if (!workout) return;
@@ -94,7 +97,6 @@ const renderWorkout = function (workout) {
   sidebarView.adjacentHTMLControler([html]);
 
   sidebarView.controlStateIndex(model.setStateIndex);
-  // model.controlStateIndex(workoutsList);
 };
 
 // Delete workout by 'x' button
@@ -111,7 +113,6 @@ const controlDeleteWorkout = function (event) {
 
   // setting id number for each workout
   sidebarView.controlStateIndex(model.setStateIndex);
-  // model.controlStateIndex(workoutsList);
 
   // remove marker from map and storage
   model.removingWorkoutData(index);
@@ -128,15 +129,16 @@ const controlEditWorkout = function (event) {
   sidebarView.editWorkout(event);
 };
 
+// when pressing 'enter' key after reintroducing workout data
 const editSubmit = function () {
   sidebarView.submitWorkoutEdit();
 
   sidebarView.controlStateIndex(model.setStateIndex);
-  // model.controlStateIndex(workoutsList);
 
   model.setLocalStorage(model.state.workouts, 'workouts');
 };
 
+// Sorting workouts
 const controlWorkoutsSorting = function (event) {
   sidebarView.workoutsSort(event, renderWorkout);
 };
@@ -147,6 +149,8 @@ const renderWorkoutMarker = async function (workout) {
   const mark = mapView.generateWorkoutMarker(workout);
   workout.adress = workout.adress ?? (await model.reverseGeocode(...workout.coords));
 
+  // prevent from rendering 2 popups on each marker
+  mark.closePopup();
   // Call function again, so when workout data arrives, change popup content
   mapView.generateWorkoutMarker(workout);
 
@@ -158,6 +162,14 @@ const renderWorkoutMarker = async function (workout) {
 // // Move to map marker when clicking workout from list
 const controlMoveToMap = function (event) {
   sidebarView.moveToMarker(event);
+};
+
+// Zoom out map view to see all markers
+const controlMapZoomOut = function () {
+  const bounds = mapView.showAllMarkers(model.state.markers);
+
+  // Set map view to bounds
+  model.state.map.fitBounds(bounds);
 };
 
 // Acces RUNNING class from model
@@ -180,7 +192,6 @@ const init = function () {
   controlLocalStorage();
 
   sidebarView.controlStateIndex(model.setStateIndex);
-  // model.controlStateIndex(workoutsList);
   model.getUserLocation(controlMap);
   sidebarView.getData(model.state);
   mapView.getData(model.state);

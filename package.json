@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "nominatim-client": "^3.2.1",
-    "openmeteo": "^1.1.4"
+    "nominatim-client": "^3.2.1"
   }
 }
